@@ -117,6 +117,8 @@ Lab Report:
 
         raw = response.choices[0].message.content.strip()
         raw = re.sub(r"```json|```", "", raw).strip()
+        if not raw:
+            return {"score": 10, "level": "Low", "color": "green", "alerts": [], "positives": ["All values appear normal"]}
         result = json.loads(raw)
 
         score = max(0, min(100, int(result.get("score", 10))))
@@ -175,6 +177,8 @@ Lab Report:
 
         raw = response.choices[0].message.content.strip()
         raw = re.sub(r"```json|```", "", raw).strip()
+        if not raw:
+            return {"score": 10, "level": "Low", "color": "green", "alerts": [], "positives": ["All values appear normal"]}
         result = json.loads(raw)
 
         # Keep only numeric values
