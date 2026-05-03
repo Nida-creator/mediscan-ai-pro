@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — MediScan AI Pro{% endblock %}
+
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <div class="welcome-text">
+        <p class="welcome-greeting">Welcome back,</p>
+        <h1 class="welcome-name" id="welcomeName">{{ name if name else 'Friend' }}</h1>
+        <p class="welcome-sub">AI-driven insights to help you understand your health.</p>
+    </div>
+    <div class="welcome-illustration">
+        <svg width="220" height="120" viewBox="0 0 220 120" fill="none" opacity="0.3">
+            <circle cx="110" cy="60" r="50" stroke="white" stroke-width="1.5" stroke-dasharray="4 4"/>
+            <circle cx="110" cy="60" r="35" stroke="white" stroke-width="1"/>
+            <path d="M110 30v60M80 60h60" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <circle cx="110" cy="60" r="8" fill="white" fill-opacity="0.3"/>
+            <path d="M60 25 Q110 10 160 25" stroke="white" stroke-width="1" stroke-dasharray="3 3"/>
+            <path d="M60 95 Q110 110 160 95" stroke="white" stroke-width="1" stroke-dasharray="3 3"/>
+            <circle cx="40" cy="45" r="6" fill="white" fill-opacity="0.2"/>
+            <circle cx="180" cy="45" r="6" fill="white" fill-opacity="0.2"/>
+            <circle cx="40" cy="75" r="4" fill="white" fill-opacity="0.15"/>
+            <circle cx="180" cy="75" r="4" fill="white" fill-opacity="0.15"/>
+        </svg>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#EFF6FF;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <p class="stat-label">Total Reports</p>
+            <h2 class="stat-value">{{ stats.total }}</h2>
+            <p class="stat-change positive">↑ uploaded</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#FEE2E2;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <p class="stat-label">Last Risk Score</p>
+            <h2 class="stat-value">{{ stats.last_score }}</h2>
+            <p class="stat-change">most recent scan</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#FEF3C7;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <p class="stat-label">Reports This Month</p>
+            <h2 class="stat-value">{{ stats.this_month }}</h2>
+            <p class="stat-change">this month</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background:#DCFCE7;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="2">
+                <polyline points="20,6 9,17 4,12"/>
+            </svg>
+        </div>
+        <div class="stat-info">
+            <p class="stat-label">AI Accuracy</p>
+            <h2 class="stat-value">96.7%</h2>
+            <p class="stat-change positive">↑ 2.1% this month</p>
+        </div>
+    </div>
+</div>
+
+<!-- Middle Section -->
+<div class="mid-grid">
+
+    <!-- Upload Card -->
+    <div class="card upload-card-dash">
+        <h3 class="card-title">New Scan Analysis</h3>
+        <div class="upload-drop-area" onclick="window.location='/scan'">
+            <div class="upload-cloud">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5">
+                    <polyline points="16,16 12,12 8,16"/>
+                    <line x1="12" y1="12" x2="12" y2="21"/>
+                    <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+                </svg>
+            </div>
+            <p class="upload-drop-text">Drag & drop reports here</p>
+            <p class="upload-drop-sub">or</p>
+            <button class="btn-primary" onclick="window.location='/scan'">Upload Files</button>
+            <p class="upload-formats">Supports: PDF, JPG, PNG — Lab Reports & Prescriptions</p>
+        </div>
+    </div>
+
+    <!-- Risk Assessment -->
+    <div class="card risk-card-dash">
+        <div class="risk-card-header">
+            <h3 class="card-title">AI Risk Assessment</h3>
+            <a href="/scan" class="view-details-link">View Details →</a>
+        </div>
+
+        {% if stats.last_score != '—' %}
+        {% set score_val = stats.last_score.split('/')[0] | int %}
+        <div class="donut-wrapper">
+            <canvas id="riskDonut" width="160" height="160"></canvas>
+            <div class="donut-center">
+                <span class="donut-score">{{ stats.last_score }}</span>
+                <span class="donut-label">Risk Score</span>
+            </div>
+        </div>
+        <div class="risk-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> High Risk <strong>18%</strong></div>
+            <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> Moderate Risk <strong>54%</strong></div>
+            <div class="legend-item"><span class="legend-dot" style="background:#22C55E;"></span> Low Risk <strong>28%</strong></div>
+        </div>
+        {% else %}
+        <div class="no-data-placeholder">
+            <p>Upload a report to see your risk assessment</p>
+            <a href="/scan" class="btn-primary" style="display:inline-block; margin-top:12px; text-decoration:none;">Upload Now</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Recent Reports Table -->
+<div class="card">
+    <div class="table-header">
+        <h3 class="card-title">Recent Reports</h3>
+        <a href="/scan" class="view-all-link">View All →</a>
+    </div>
+
+    {% if recent %}
+    <table class="reports-table">
+        <thead>
+            <tr>
+                <th>Report Name</th>
+                <th>Date</th>
+                <th>Risk Level</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in recent %}
+            <tr>
+                <td>
+                    <div class="report-name-cell">
+                        <div class="report-file-icon">📄</div>
+                        <span>{{ r.name }}</span>
+                    </div>
+                </td>
+                <td>{{ r.date }}</td>
+                <td>
+                    <span class="risk-pill 
+                        {% if r.level == 'Low' %}pill-green
+                        {% elif r.level == 'Medium' %}pill-orange
+                        {% else %}pill-red{% endif %}">
+                        {{ r.level }}
+                    </span>
+                </td>
+                <td><span class="status-pill">Completed</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-table">
+        <p>No reports yet. <a href="/scan">Upload your first report →</a></p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <p class="quick-label">Quick Actions</p>
+    <div class="quick-btns">
+        <a href="/scan" class="quick-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Upload Report
+        </a>
+        <a href="/chat" class="quick-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Ask AI Doctor
+        </a>
+        <a href="/trends" class="quick-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+            </svg>
+            Health Trends
+        </a>
+        <a href="/family" class="quick-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+            </svg>
+            Family Profiles
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+{% if stats.last_score != '—' %}
+<script>
+const score = {{ stats.last_score.split('/')[0] }};
+const ctx = document.getElementById('riskDonut').getContext('2d');
+const remaining = 100 - score;
+const gradient = ctx.createLinearGradient(0, 0, 160, 0);
+
+if (score < 33) {
+    gradient.addColorStop(0, '#22C55E');
+    gradient.addColorStop(1, '#16A34A');
+} else if (score < 66) {
+    gradient.addColorStop(0, '#F59E0B');
+    gradient.addColorStop(1, '#D97706');
+} else {
+    gradient.addColorStop(0, '#EF4444');
+    gradient.addColorStop(1, '#DC2626');
+}
+
+function drawDonut(canvas, score) {
+    const ctx = canvas.getContext('2d');
+    const cx = 80, cy = 80, r = 65, lw = 14;
+    ctx.clearRect(0, 0, 160, 160);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#F1F5F9';
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    const angle = (score / 100) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, -Math.PI / 2, angle);
+    ctx.strokeStyle = score < 33 ? '#22C55E' : score < 66 ? '#F59E0B' : '#EF4444';
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+}
+drawDonut(document.getElementById('riskDonut'), score);
+</script>
+{% endif %}
+{% endblock %}

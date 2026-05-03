@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Health Trends — MediScan AI Pro{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header-banner">
+    <div>
+        <h1 class="page-title">📈 Health Trends</h1>
+        <p class="page-sub">Upload multiple reports to track your health over time</p>
+    </div>
+</div>
+
+<!-- Upload Multiple -->
+<div class="card" id="trendsUploadSection">
+    <h3 class="card-title">Upload Reports (Oldest → Newest)</h3>
+    <div class="upload-zone" id="trendsUploadZone">
+        <div class="upload-zone-icon">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5">
+                <polyline points="16,16 12,12 8,16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+        </div>
+        <p class="upload-drop-text">Select 2 or more lab reports</p>
+        <label class="btn-primary" for="trendsFileInput" style="cursor:pointer; margin-top:12px;">
+            Choose Files
+        </label>
+        <input type="file" id="trendsFileInput" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none;" onchange="handleTrendsFiles(this)">
+        <p class="upload-formats" style="margin-top:8px;">PDF, JPG, PNG</p>
+    </div>
+</div>
+
+<!-- Loading -->
+<div class="card loading-card" id="trendsLoading" style="display:none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text">Extracting health values from reports...</p>
+    </div>
+</div>
+
+<!-- Results -->
+<div id="trendsResults" style="display:none;">
+
+    <div class="results-header">
+        <h2 class="results-title">📊 Your Health Trends</h2>
+        <button class="btn-outline" onclick="resetTrends()">🔄 Upload New Reports</button>
+    </div>
+
+    <!-- Metric Selector -->
+    <div class="card">
+        <div class="metric-selector-row">
+            <h4 class="card-title" style="margin:0;">Select Metric to Chart</h4>
+            <select id="metricSelect" class="metric-select" onchange="renderChart()"></select>
+        </div>
+        <div class="chart-wrapper">
+            <canvas id="trendChart" height="100"></canvas>
+        </div>
+        <div class="chart-stats-row" id="chartStats"></div>
+    </div>
+
+    <!-- Raw Values Table -->
+    <div class="card">
+        <h4 class="card-title">📋 All Extracted Values</h4>
+        <div class="table-scroll">
+            <table class="reports-table" id="valuesTable"></table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let trendsData = [];
+let chartInstance = null;
+
+const NORMAL_RANGES = {
+    'Glucose': [70, 100],
+    'Hemoglobin': [12, 17.5],
+    'WBC': [4.5, 11.0],
+    'Platelets': [150, 400],
+    'Creatinine': [0.6, 1.2],
+    'Cholesterol': [0, 200],
+    'HbA1c': [4.0, 5.6],
+    'Sodium': [135, 145],
+    'Potassium': [3.5, 5.1],
+};
+
+function handleTrendsFiles(input) {
+    const files = input.files;
+    if (files.length < 2) {
+        alert('Please upload at least 2 reports to see trends.');
+        return;
+    }
+
+    document.getElementById('trendsUploadSection').style.display = 'none';
+    document.getElementById('trendsLoading').style.display = 'block';
+
+    const formData = new FormData();
+    Array.from(files).forEach(f => formData.append('files', f));
+
+    fetch('/trends/upload', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('trendsLoading').style.display = 'none';
+            trendsData = data.results;
+            showTrends();
+        })
+        .catch(() => {
+            document.getElementById('trendsLoading').style.display = 'none';
+            alert('Error processing reports. Please try again.');
+            resetTrends();
+        });
+}
+
+function showTrends() {
+    // Get all metric keys
+    const allKeys = new Set();
+    trendsData.forEach(r => Object.keys(r.values).forEach(k => allKeys.add(k)));
+
+    if (allKeys.size === 0) {
+        alert('Could not extract values from reports. Please try clearer PDF files.');
+        resetTrends();
+        return;
+    }
+
+    // Populate selector
+    const select = document.getElementById('metricSelect');
+    select.innerHTML = '';
+    allKeys.forEach(k => {
+        const opt = document.createElement('option');
+        opt.value = k;
+        opt.textContent = k;
+        select.appendChild(opt);
+    });
+
+    // Build table
+    buildTable(Array.from(allKeys));
+
+    document.getElementById('trendsResults').style.display = 'block';
+    renderChart();
+}
+
+function renderChart() {
+    const metric = document.getElementById('metricSelect').value;
+    const labels = trendsData.map(r => r.label);
+    const values = trendsData.map(r => r.values[metric] ?? null);
+    const normal = NORMAL_RANGES[metric];
+
+    if (chartInstance) chartInstance.destroy();
+
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    const datasets = [{
+        label: metric,
+        data: values,
+        borderColor: '#2563EB',
+        backgroundColor: 'rgba(37,99,235,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#2563EB',
+        pointRadius: 6,
+        tension: 0.35,
+        fill: true,
+    }];
+
+    if (normal) {
+        datasets.push({
+            label: 'Normal Min',
+            data: Array(labels.length).fill(normal[0]),
+            borderColor: '#22C55E',
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+        });
+        datasets.push({
+            label: 'Normal Max',
+            data: Array(labels.length).fill(normal[1]),
+            borderColor: '#EF4444',
+            borderWidth: 1.5,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            fill: false,
+        });
+    }
+
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: { grid: { color: '#F1F5F9' } },
+                x: { grid: { color: '#F1F5F9' } }
+            }
+        }
+    });
+
+    // Stats
+    const nonNull = values.filter(v => v !== null);
+    const avg = nonNull.length ? (nonNull.reduce((a,b)=>a+b,0)/nonNull.length).toFixed(1) : '—';
+    const latest = nonNull[nonNull.length-1] ?? '—';
+    const min = nonNull.length ? Math.min(...nonNull) : '—';
+    const max = nonNull.length ? Math.max(...nonNull) : '—';
+
+    document.getElementById('chartStats').innerHTML = `
+        <div class="chart-stat"><span>Latest</span><strong>${latest}</strong></div>
+        <div class="chart-stat"><span>Average</span><strong>${avg}</strong></div>
+        <div class="chart-stat"><span>Min</span><strong>${min}</strong></div>
+        <div class="chart-stat"><span>Max</span><strong>${max}</strong></div>
+        ${normal ? `<div class="chart-stat"><span>Normal Range</span><strong>${normal[0]}–${normal[1]}</strong></div>` : ''}
+    `;
+}
+
+function buildTable(keys) {
+    const table = document.getElementById('valuesTable');
+    const headerRow = '<thead><tr><th>Report</th>' + keys.map(k=>`<th>${k}</th>`).join('') + '</tr></thead>';
+    const rows = trendsData.map(r => {
+        const cells = keys.map(k => {
+            const v = r.values[k];
+            const normal = NORMAL_RANGES[k];
+            let cls = '';
+            if (v !== undefined && normal) {
+                cls = v < normal[0] || v > normal[1] ? 'cell-red' : 'cell-green';
+            }
+            return `<td class="${cls}">${v ?? '—'}</td>`;
+        }).join('');
+        return `<tr><td><strong>${r.label}</strong><br><small>${r.name}</small></td>${cells}</tr>`;
+    }).join('');
+    table.innerHTML = headerRow + '<tbody>' + rows + '</tbody>';
+}
+
+function resetTrends() {
+    document.getElementById('trendsUploadSection').style.display = 'block';
+    document.getElementById('trendsLoading').style.display = 'none';
+    document.getElementById('trendsResults').style.display = 'none';
+    document.getElementById('trendsFileInput').value = '';
+    if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+    trendsData = [];
+}
+</script>
+{% endblock %}

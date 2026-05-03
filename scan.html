@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Scan Report — MediScan AI Pro{% endblock %}
+
+{% block content %}
+
+<div class="page-header-banner">
+    <div>
+        <h1 class="page-title">📄 <span data-key="upload_title">Upload Your Medical Report</span></h1>
+        <p class="page-sub" data-key="upload_subtitle">Supports: PDF, JPG, PNG — Lab Reports & Prescriptions</p>
+    </div>
+</div>
+
+<!-- Upload Area -->
+<div class="card" id="uploadSection">
+    <div class="upload-zone" id="uploadZone">
+        <div class="upload-zone-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5">
+                <polyline points="16,16 12,12 8,16"/>
+                <line x1="12" y1="12" x2="12" y2="21"/>
+                <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+            </svg>
+        </div>
+        <h3 class="upload-zone-title" data-key="drag_drop">Drag & drop your report here</h3>
+        <p class="upload-zone-sub">or</p>
+        <label class="btn-primary" for="fileInput" style="cursor:pointer;">
+            <span data-key="upload_btn">Choose File</span>
+        </label>
+        <input type="file" id="fileInput" accept=".pdf,.png,.jpg,.jpeg" style="display:none;" onchange="handleFile(this)">
+        <p class="upload-formats">PDF, JPG, PNG — Lab Reports & Prescriptions</p>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div class="card loading-card" id="loadingCard" style="display:none;">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p class="loading-text" data-key="analyzing">Analyzing your report with AI...</p>
+        <p class="loading-sub">This usually takes 5–10 seconds</p>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div id="resultsSection" style="display:none;">
+
+    <div class="results-header">
+        <h2 class="results-title">✅ <span data-key="results_title">Your Results</span></h2>
+        <button class="btn-outline" onclick="resetUpload()">🔄 Upload Another</button>
+    </div>
+
+    <div class="results-grid">
+
+        <!-- Explanation Card -->
+        <div class="card explanation-card">
+            <h4 class="card-title">🧠 AI Analysis</h4>
+            <div class="explanation-text" id="explanationText"></div>
+        </div>
+
+        <!-- Risk + Alerts Column -->
+        <div class="results-right">
+
+            <!-- Risk Score Card -->
+            <div class="card risk-score-card">
+                <h4 class="card-title" data-key="risk_score">Health Risk Score</h4>
+                <div class="risk-score-display">
+                    <div class="risk-number" id="riskNumber">—</div>
+                    <div class="risk-badge-large" id="riskBadge">—</div>
+                </div>
+                <div class="risk-bar-wrap">
+                    <div class="risk-bar-track">
+                        <div class="risk-bar-fill" id="riskBarFill"></div>
+                    </div>
+                </div>
+                <p class="risk-desc" id="riskDesc"></p>
+            </div>
+
+            <!-- Alerts Card -->
+            <div class="card">
+                <h4 class="card-title">⚠️ Findings</h4>
+                <div id="alertsList"></div>
+                <div id="positivesList" style="margin-top:8px;"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+        <a href="/chat" class="btn-primary">💬 Ask AI Doctor</a>
+        <a href="/trends" class="btn-outline">📈 Health Trends</a>
+        <a href="/family" class="btn-outline">👨‍👩‍👧 Family Profiles</a>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentLang = localStorage.getItem('lang') || 'en';
+
+// Drag and drop
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+function handleFile(input) {
+    if (input.files[0]) processFile(input.files[0]);
+}
+
+function processFile(file) {
+    document.getElementById('uploadSection').style.display = 'none';
+    document.getElementById('loadingCard').style.display = 'block';
+    document.getElementById('resultsSection').style.display = 'none';
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('lang', currentLang);
+
+    fetch('/upload', { method: 'POST', body: formData })
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('loadingCard').style.display = 'none';
+            if (data.error) {
+                alert('Error: ' + data.error);
+                resetUpload();
+                return;
+            }
+            showResults(data);
+        })
+        .catch(err => {
+            document.getElementById('loadingCard').style.display = 'none';
+            alert('Something went wrong. Please try again.');
+            resetUpload();
+        });
+}
+
+function showResults(data) {
+    // Explanation
+    document.getElementById('explanationText').innerHTML =
+        data.explanation.replace(/\n/g, '<br>');
+
+    // Risk score
+    const risk = data.risk;
+    const score = risk.score;
+    document.getElementById('riskNumber').textContent = score + '/100';
+
+    const badge = document.getElementById('riskBadge');
+    const fill = document.getElementById('riskBarFill');
+    const desc = document.getElementById('riskDesc');
+
+    if (score < 33) {
+        badge.textContent = 'Low Risk';
+        badge.className = 'risk-badge-large badge-green';
+        fill.style.background = '#22C55E';
+        desc.textContent = 'Your report looks healthy. Keep it up!';
+    } else if (score < 66) {
+        badge.textContent = 'Moderate Risk';
+        badge.className = 'risk-badge-large badge-orange';
+        fill.style.background = '#F59E0B';
+        desc.textContent = 'Some values need attention. Consult your doctor.';
+    } else {
+        badge.textContent = 'High Risk';
+        badge.className = 'risk-badge-large badge-red';
+        fill.style.background = '#EF4444';
+        desc.textContent = 'Critical values detected. Please see a doctor immediately.';
+    }
+    fill.style.width = score + '%';
+
+    // Alerts
+    const alertsList = document.getElementById('alertsList');
+    alertsList.innerHTML = '';
+    if (risk.alerts && risk.alerts.length > 0) {
+        risk.alerts.forEach(a => {
+            alertsList.innerHTML += `<div class="alert-item alert-red">🔴 ${a}</div>`;
+        });
+    } else {
+        alertsList.innerHTML = `<div class="alert-item alert-green">✅ No critical findings</div>`;
+    }
+
+    // Positives
+    const posList = document.getElementById('positivesList');
+    posList.innerHTML = '';
+    if (risk.positives && risk.positives.length > 0) {
+        risk.positives.forEach(p => {
+            posList.innerHTML += `<div class="alert-item alert-green">🟢 ${p}</div>`;
+        });
+    }
+
+    document.getElementById('resultsSection').style.display = 'block';
+}
+
+function resetUpload() {
+    document.getElementById('uploadSection').style.display = 'block';
+    document.getElementById('loadingCard').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+}
+</script>
+{% endblock %}

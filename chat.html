@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}AI Doctor Chat — MediScan AI Pro{% endblock %}
+
+{% block content %}
+
+<div class="page-header-banner">
+    <div>
+        <h1 class="page-title">💬 AI Doctor Chat</h1>
+        <p class="page-sub">Ask anything about your uploaded lab report</p>
+    </div>
+</div>
+
+{% if not report_name %}
+<div class="card empty-chat-card">
+    <div class="empty-chat-icon">📄</div>
+    <h3>No Report Uploaded</h3>
+    <p>Please upload a lab report first to start chatting with the AI Doctor.</p>
+    <a href="/scan" class="btn-primary" style="display:inline-block; margin-top:16px; text-decoration:none;">
+        Upload Report →
+    </a>
+</div>
+{% else %}
+
+<div class="chat-layout">
+
+    <!-- Chat Window -->
+    <div class="card chat-card">
+        <div class="chat-report-badge">
+            <span>📄 {{ report_name }}</span>
+            <a href="/scan" class="change-report-link">Change Report</a>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Intro message -->
+            <div class="chat-msg assistant-msg">
+                <div class="msg-avatar">🩺</div>
+                <div class="msg-bubble">
+                    I have analyzed your report <strong>{{ report_name }}</strong>. Ask me anything about your results — I'll explain in simple language.
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-row">
+            <input
+                type="text"
+                id="chatInput"
+                class="chat-input"
+                placeholder="Ask about your report..."
+                onkeydown="if(event.key==='Enter') sendMessage()"
+            >
+            <button class="chat-send-btn" onclick="sendMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Suggested Questions -->
+    <div class="chat-sidebar">
+        <div class="card">
+            <h4 class="card-title">💡 Suggested Questions</h4>
+            <div class="suggested-questions">
+                <button class="suggested-q" onclick="askQuestion(this)">Should I be worried about my results?</button>
+                <button class="suggested-q" onclick="askQuestion(this)">What does my hemoglobin level mean?</button>
+                <button class="suggested-q" onclick="askQuestion(this)">Is my glucose level normal?</button>
+                <button class="suggested-q" onclick="askQuestion(this)">What lifestyle changes should I make?</button>
+                <button class="suggested-q" onclick="askQuestion(this)">Do I need to see a doctor urgently?</button>
+                <button class="suggested-q" onclick="askQuestion(this)">میرے نتائج کا کیا مطلب ہے؟</button>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+            <h4 class="card-title">⚕️ Disclaimer</h4>
+            <p style="font-size:0.82rem; color:#6B7280; line-height:1.5;">
+                MediScan AI Pro is an educational tool only. Always consult a qualified doctor for medical decisions.
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentLang = localStorage.getItem('lang') || 'en';
+let isLoading = false;
+
+function askQuestion(btn) {
+    document.getElementById('chatInput').value = btn.textContent;
+    sendMessage();
+}
+
+function sendMessage() {
+    if (isLoading) return;
+    const input = document.getElementById('chatInput');
+    const question = input.value.trim();
+    if (!question) return;
+
+    addMessage('user', question);
+    input.value = '';
+    isLoading = true;
+
+    // Typing indicator
+    const typingId = addTyping();
+
+    fetch('/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, lang: currentLang })
+    })
+    .then(r => r.json())
+    .then(data => {
+        removeTyping(typingId);
+        isLoading = false;
+        if (data.error) {
+            addMessage('assistant', '⚠️ ' + data.error);
+        } else {
+            addMessage('assistant', data.answer);
+        }
+    })
+    .catch(() => {
+        removeTyping(typingId);
+        isLoading = false;
+        addMessage('assistant', '⚠️ Something went wrong. Please try again.');
+    });
+}
+
+function addMessage(role, text) {
+    const container = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `chat-msg ${role}-msg`;
+    const avatar = role === 'user' ? '👤' : '🩺';
+    div.innerHTML = `
+        <div class="msg-avatar">${avatar}</div>
+        <div class="msg-bubble">${text.replace(/\n/g, '<br>')}</div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function addTyping() {
+    const container = document.getElementById('chatMessages');
+    const id = 'typing-' + Date.now();
+    const div = document.createElement('div');
+    div.className = 'chat-msg assistant-msg';
+    div.id = id;
+    div.innerHTML = `
+        <div class="msg-avatar">🩺</div>
+        <div class="msg-bubble typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        </div>
+    `;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function removeTyping(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+</script>
+{% endblock %}

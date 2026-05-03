@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Family Profiles — MediScan AI Pro{% endblock %}
+
+{% block content %}
+
+<div class="page-header-banner">
+    <div>
+        <h1 class="page-title">👨‍👩‍👧 Family Profiles</h1>
+        <p class="page-sub">Manage health records for your entire family</p>
+    </div>
+</div>
+
+<div class="family-layout">
+
+    <!-- Left — Members List -->
+    <div class="family-left">
+        <div class="card">
+            <div class="family-list-header">
+                <h4 class="card-title">Family Members</h4>
+                <button class="btn-primary btn-sm" onclick="showAddForm()">+ Add</button>
+            </div>
+
+            <div id="membersList">
+                {% if members %}
+                    {% for m in members %}
+                    <div class="member-card" id="memberCard{{ loop.index0 }}" onclick="selectMember({{ loop.index0 }})">
+                        <div class="member-avatar-sm">{{ m.relation | avatar }}</div>
+                        <div class="member-info">
+                            <p class="member-name">{{ m.name }}</p>
+                            <p class="member-meta">{{ m.relation }} · {{ m.age }} yrs</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="empty-members">
+                    <p>👈 No members yet</p>
+                    <p style="font-size:0.8rem; color:#9CA3AF;">Add your first family member</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right — Detail / Add Form -->
+    <div class="family-right">
+
+        <!-- Add Form -->
+        <div class="card" id="addForm" style="display:none;">
+            <h4 class="card-title">➕ Add Family Member</h4>
+            <div class="form-group">
+                <label class="form-label">Name</label>
+                <input type="text" id="newName" class="form-input" placeholder="e.g. Ahmed Khan">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Relation</label>
+                <select id="newRelation" class="form-input">
+                    <option>Myself</option>
+                    <option>Father</option>
+                    <option>Mother</option>
+                    <option>Son</option>
+                    <option>Daughter</option>
+                    <option>Brother</option>
+                    <option>Sister</option>
+                    <option>Husband</option>
+                    <option>Wife</option>
+                    <option>Grandfather</option>
+                    <option>Grandmother</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Age</label>
+                <input type="number" id="newAge" class="form-input" placeholder="e.g. 35" min="1" max="120">
+            </div>
+            <div class="form-actions">
+                <button class="btn-primary" onclick="saveMember()">Save Member</button>
+                <button class="btn-outline" onclick="hideAddForm()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- Member Detail -->
+        <div class="card" id="memberDetail" style="display:none;">
+            <div class="member-detail-header">
+                <div class="member-detail-avatar" id="detailAvatar"></div>
+                <div>
+                    <h2 class="member-detail-name" id="detailName"></h2>
+                    <p class="member-detail-meta" id="detailMeta"></p>
+                </div>
+            </div>
+            <div class="member-detail-stats">
+                <div class="detail-stat"><span>Total Reports</span><strong id="detailReports">0</strong></div>
+                <div class="detail-stat"><span>Last Scan</span><strong id="detailLastScan">—</strong></div>
+                <div class="detail-stat"><span>Last Risk Score</span><strong id="detailLastScore">—</strong></div>
+            </div>
+            <div class="detail-actions">
+                <a href="/scan" class="btn-primary" style="text-decoration:none;">📄 Scan Report</a>
+                <a href="/trends" class="btn-outline" style="text-decoration:none;">📈 Health Trends</a>
+            </div>
+            <p style="font-size:0.82rem; color:#9CA3AF; margin-top:16px;">
+                No reports yet for this member. Upload a scan to get started.
+            </p>
+        </div>
+
+        <!-- Default Empty State -->
+        <div class="card empty-detail-card" id="emptyDetail">
+            <div style="font-size:3rem;">👈</div>
+            <p>Select a family member or add a new one to get started.</p>
+            <button class="btn-primary" style="margin-top:16px;" onclick="showAddForm()">+ Add Family Member</button>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const AVATARS = {
+    'Myself':'🧑','Father':'👨','Mother':'👩','Son':'👦','Daughter':'👧',
+    'Brother':'👱','Sister':'👱‍♀️','Husband':'👨','Wife':'👩',
+    'Grandfather':'👴','Grandmother':'👵','Other':'👤'
+};
+
+let members = {{ members | tojson }};
+
+function showAddForm() {
+    document.getElementById('addForm').style.display = 'block';
+    document.getElementById('memberDetail').style.display = 'none';
+    document.getElementById('emptyDetail').style.display = 'none';
+}
+
+function hideAddForm() {
+    document.getElementById('addForm').style.display = 'none';
+    document.getElementById('emptyDetail').style.display = 'block';
+}
+
+function saveMember() {
+    const name = document.getElementById('newName').value.trim();
+    const relation = document.getElementById('newRelation').value;
+    const age = document.getElementById('newAge').value;
+
+    if (!name) { alert('Please enter a name'); return; }
+
+    fetch('/family/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, relation, age })
+    })
+    .then(r => r.json())
+    .then(data => {
+        members = data.members;
+        renderMembersList();
+        document.getElementById('addForm').style.display = 'none';
+        selectMember(members.length - 1);
+    });
+}
+
+function renderMembersList() {
+    const list = document.getElementById('membersList');
+    if (members.length === 0) {
+        list.innerHTML = '<div class="empty-members"><p>No members yet</p></div>';
+        return;
+    }
+    list.innerHTML = members.map((m, i) => `
+        <div class="member-card" id="memberCard${i}" onclick="selectMember(${i})">
+            <div class="member-avatar-sm">${AVATARS[m.relation] || '👤'}</div>
+            <div class="member-info">
+                <p class="member-name">${m.name}</p>
+                <p class="member-meta">${m.relation} · ${m.age} yrs</p>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectMember(idx) {
+    // Highlight selected
+    document.querySelectorAll('.member-card').forEach((c, i) => {
+        c.classList.toggle('active', i === idx);
+    });
+
+    const m = members[idx];
+    document.getElementById('detailAvatar').textContent = AVATARS[m.relation] || '👤';
+    document.getElementById('detailName').textContent = m.name;
+    document.getElementById('detailMeta').textContent = `${m.relation} · ${m.age} years old`;
+    document.getElementById('detailReports').textContent = (m.reports || []).length;
+    document.getElementById('detailLastScan').textContent = '—';
+    document.getElementById('detailLastScore').textContent = '—';
+
+    document.getElementById('addForm').style.display = 'none';
+    document.getElementById('emptyDetail').style.display = 'none';
+    document.getElementById('memberDetail').style.display = 'block';
+
+    fetch(`/family/select/${idx}`);
+}
+</script>
+{% endblock %}
