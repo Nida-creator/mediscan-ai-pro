@@ -8,7 +8,7 @@
     <div class="welcome-text">
         <p class="welcome-greeting">Welcome back,</p>
         <h1 class="welcome-name" id="welcomeName">{{ name if name else 'Friend' }}</h1>
-        <p class="welcome-sub">AI-driven insights to help you understand your health.</p>
+        <p class="welcome-sub"><span data-key="dash_welcome_sub">AI-driven insights to help you understand your health.</span></p>
     </div>
     <div class="welcome-illustration">
         <svg width="220" height="120" viewBox="0 0 220 120" fill="none" opacity="0.3">
@@ -36,7 +36,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <p class="stat-label">Total Reports</p>
+            <p class="stat-label"><span data-key="dash_total_reports">Total Reports</span></p>
             <h2 class="stat-value">{{ stats.total }}</h2>
             <p class="stat-change positive">↑ uploaded</p>
         </div>
@@ -50,7 +50,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <p class="stat-label">Last Risk Score</p>
+            <p class="stat-label"><span data-key="dash_last_score">Last Risk Score</span></p>
             <h2 class="stat-value">{{ stats.last_score }}</h2>
             <p class="stat-change">most recent scan</p>
         </div>
@@ -65,7 +65,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <p class="stat-label">Reports This Month</p>
+            <p class="stat-label"><span data-key="dash_this_month">Reports This Month</span></p>
             <h2 class="stat-value">{{ stats.this_month }}</h2>
             <p class="stat-change">this month</p>
         </div>
@@ -78,7 +78,7 @@
             </svg>
         </div>
         <div class="stat-info">
-            <p class="stat-label">AI Accuracy</p>
+            <p class="stat-label"><span data-key="dash_accuracy">AI Accuracy</span></p>
             <h2 class="stat-value">96.7%</h2>
             <p class="stat-change positive">↑ 2.1% this month</p>
         </div>
@@ -90,7 +90,7 @@
 
     <!-- Upload Card -->
     <div class="card upload-card-dash">
-        <h3 class="card-title">New Scan Analysis</h3>
+        <h3 class="card-title"><span data-key="dash_new_scan">New Scan Analysis</span></h3>
         <div class="upload-drop-area" onclick="window.location='/scan'">
             <div class="upload-cloud">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.5">
@@ -99,7 +99,7 @@
                     <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
                 </svg>
             </div>
-            <p class="upload-drop-text">Drag & drop reports here</p>
+            <p class="upload-drop-text"><span data-key="dash_drag">Drag & drop reports here</span></p>
             <p class="upload-drop-sub">or</p>
             <button class="btn-primary" onclick="window.location='/scan'">Upload Files</button>
             <p class="upload-formats">Supports: PDF, JPG, PNG — Lab Reports & Prescriptions</p>
@@ -109,7 +109,7 @@
     <!-- Risk Assessment -->
     <div class="card risk-card-dash">
         <div class="risk-card-header">
-            <h3 class="card-title">AI Risk Assessment</h3>
+            <h3 class="card-title"><span data-key="dash_risk_title">AI Risk Assessment</span></h3>
             <a href="/scan" class="view-details-link">View Details →</a>
         </div>
 
@@ -140,7 +140,7 @@
 <!-- Recent Reports Table -->
 <div class="card">
     <div class="table-header">
-        <h3 class="card-title">Recent Reports</h3>
+        <h3 class="card-title"><span data-key="dash_recent">Recent Reports</span></h3>
         <a href="/scan" class="view-all-link">View All →</a>
     </div>
 
