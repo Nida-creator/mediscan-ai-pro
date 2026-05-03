@@ -6,6 +6,22 @@ import re
 
 load_dotenv()
 
+import re
+
+def clean_report_text(text: str) -> str:
+    """Remove non-English characters and clean up report text before sending to AI."""
+    # Remove Chinese, Malay and other non-Latin characters
+    text = re.sub(r'[\u4e00-\u9fff]+', '', text)  # Remove Chinese
+    text = re.sub(r'[\u0600-\u06ff]+', '', text)  # Remove Arabic
+    # Remove excessive whitespace
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r' {2,}', ' ', text)
+    # Remove garbled lines (lines with no letters)
+    lines = text.split('\n')
+    clean_lines = [l for l in lines if re.search(r'[a-zA-Z]', l)]
+    return '\n'.join(clean_lines).strip()
+
+
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 MODEL = "llama-3.3-70b-versatile"
 
