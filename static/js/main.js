@@ -1,8 +1,9 @@
+
 const TRANSLATIONS = {
     en: {
         upload_title: 'Upload Your Medical Report',
-        upload_subtitle: 'Supports: PDF, JPG, PNG',
-        drag_drop: 'Drag & drop your report here',
+        upload_subtitle: 'Supports: PDF, JPG, PNG - Lab Reports and Prescriptions',
+        drag_drop: 'Drag and drop your report here',
         upload_btn: 'Choose File',
         analyzing: 'Analyzing your report with AI...',
         results_title: 'Your Results',
@@ -24,7 +25,7 @@ let currentLang = localStorage.getItem('lang') || 'en';
 function toggleLang() {
     currentLang = currentLang === 'en' ? 'ur' : 'en';
     localStorage.setItem('lang', currentLang);
-    document.getElementById('langLabel').textContent = currentLang === 'en' ? '🇬🇧 English' : '🇵🇰 اردو';
+    document.getElementById('langLabel').textContent = currentLang === 'en' ? 'English' : 'Urdu';
     applyTranslations();
 }
 
@@ -39,13 +40,11 @@ function applyTranslations() {
 
 function showNameModal() {
     document.getElementById('nameModal').classList.add('show');
-    setTimeout(() => document.getElementById('nameInput') && document.getElementById('nameInput').focus(), 100);
+    setTimeout(() => document.getElementById('nameInput').focus(), 100);
 }
 
 function saveName() {
-    const input = document.getElementById('nameInput');
-    if (!input) return;
-    const name = input.value.trim();
+    const name = document.getElementById('nameInput').value.trim();
     if (!name) return;
     localStorage.setItem('userName', name);
     document.getElementById('userName').textContent = name;
@@ -59,10 +58,6 @@ function saveName() {
     });
 }
 
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('nameInput');
     if (nameInput) {
@@ -72,13 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const saved = localStorage.getItem('lang') || 'en';
     currentLang = saved;
-    const langLabel = document.getElementById('langLabel');
-    if (langLabel) langLabel.textContent = saved === 'en' ? '🇬🇧 English' : '🇵🇰 اردو';
+    document.getElementById('langLabel').textContent = saved === 'en' ? 'English' : 'Urdu';
     applyTranslations();
     const savedName = localStorage.getItem('userName');
     if (savedName) {
-        const userNameEl = document.getElementById('userName');
-        if (userNameEl) userNameEl.textContent = savedName;
+        document.getElementById('userName').textContent = savedName;
         const welcomeName = document.getElementById('welcomeName');
         if (welcomeName) welcomeName.textContent = savedName;
     } else {
@@ -86,7 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
 document.addEventListener('click', e => {
     const modal = document.getElementById('nameModal');
-    if (modal && e.target === modal) modal.classList.remove('show');
+    if (e.target === modal) modal.classList.remove('show');
 });
