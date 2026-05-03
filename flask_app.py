@@ -184,11 +184,8 @@ def upload():
 
 @app.route('/chat')
 def chat_page():
-    report_name = session.get('report_name', '')
-    # Verify report file still exists
-    report_file = session.get('report_file', '')
-    if report_file and not os.path.exists(report_file):
-        report_name = ''  # File gone, show upload prompt
+    # Always allow chat - no report needed
+    report_name = session.get('report_name', 'General Health Chat')
     return render_template('chat.html', report_name=report_name)
 
 @app.route('/chat/send', methods=['POST'])
@@ -196,15 +193,12 @@ def chat_send():
     data = request.get_json()
     question = data.get('question', '')
     lang = data.get('lang', 'en')
-    # Read report from file (not session)
-    report_file = session.get('report_file', '')
+    # Read report if available, chat works without it too
+    REPORT_FILE = '/tmp/last_report.txt'
     report_text = ''
-    if report_file and os.path.exists(report_file):
-        with open(report_file, 'r') as rf:
+    if os.path.exists(REPORT_FILE):
+        with open(REPORT_FILE, 'r') as rf:
             report_text = rf.read()
-
-    if not report_text:
-        return jsonify({'error': 'No report uploaded'}), 400
 
     try:
         if AI_AVAILABLE:
