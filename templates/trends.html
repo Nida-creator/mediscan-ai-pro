@@ -106,6 +106,8 @@ function handleTrendsFiles(input) {
         alert('Please upload at least 2 reports to see trends.');
         return;
     }
+    // Clear any auto-loaded member data before manual upload
+    trendsData = [];
 
     document.getElementById('trendsUploadSection').style.display = 'none';
     document.getElementById('trendsLoading').style.display = 'block';
@@ -133,8 +135,13 @@ function showTrends() {
     trendsData.forEach(r => Object.keys(r.values).forEach(k => allKeys.add(k)));
 
     if (allKeys.size === 0) {
-        alert('Could not extract values from reports. Please try clearer PDF files.');
-        resetTrends();
+        // Show risk score trend instead if no values extracted
+        document.getElementById('trendsResults').style.display = 'block';
+        document.getElementById('metricSelect').innerHTML = '<option value="score">Risk Score</option>';
+        // Build score-based chart from reports
+        const scoreData = trendsData.map(r => r.score || 0);
+        const labels = trendsData.map(r => r.label);
+        buildScoreChart(labels, scoreData);
         return;
     }
 
@@ -259,6 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (data.reports && data.reports.length >= 2) {
                     document.getElementById('memberTrendBanner').style.display = 'block';
                     document.getElementById('memberTrendName').textContent = data.member_name;
+                    // Hide manual upload section - we have data already
+                    document.getElementById('trendsUploadSection').style.display = 'none';
                     trendsData = data.reports.map((r, i) => ({
                         label: r.date || 'Report ' + (i+1),
                         name: r.name,
@@ -273,6 +282,52 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 });
+
+function buildScoreChart(labels, scores) {
+    if (chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Risk Score',
+                data: scores,
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239,68,68,0.08)',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#EF4444',
+                pointRadius: 6,
+                tension: 0.35,
+                fill: true,
+            }, {
+                label: 'Safe Zone',
+                data: Array(labels.length).fill(33),
+                borderColor: '#22C55E',
+                borderWidth: 1.5,
+                borderDash: [6, 4],
+                pointRadius: 0,
+                fill: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+                y: { min: 0, max: 100, grid: { color: '#F1F5F9' } },
+                x: { grid: { color: '#F1F5F9' } }
+            }
+        }
+    });
+    const avg = (scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1);
+    document.getElementById('chartStats').innerHTML = `
+        <div class="chart-stat"><span>Latest Score</span><strong>${scores[scores.length-1]}/100</strong></div>
+        <div class="chart-stat"><span>Average</span><strong>${avg}/100</strong></div>
+        <div class="chart-stat"><span>Best</span><strong>${Math.min(...scores)}/100</strong></div>
+        <div class="chart-stat"><span>Worst</span><strong>${Math.max(...scores)}/100</strong></div>
+    `;
+    document.getElementById('trendsResults').style.display = 'block';
+}
 
 function resetTrends() {
     document.getElementById('trendsUploadSection').style.display = 'block';
