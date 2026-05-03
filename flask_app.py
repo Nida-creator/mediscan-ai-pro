@@ -8,7 +8,7 @@ import os, json
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get("SECRET_KEY", "mediscan-hackathon-2026-secret")
 
 # ── Jinja2 avatar filter ──────────────────────────────────────────────────────
 AVATARS = {
