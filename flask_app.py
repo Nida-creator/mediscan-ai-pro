@@ -19,7 +19,7 @@ AVATARS = {
 @app.template_filter('avatar')
 def avatar_filter(relation):
     return AVATARS.get(relation, '👤')
-UPLOAD_FOLDER = 'uploads'
+UPLOAD_FOLDER = '/tmp/uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ── Import AI functions ───────────────────────────────────────────────────────
