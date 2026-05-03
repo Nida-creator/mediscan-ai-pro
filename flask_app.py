@@ -69,6 +69,10 @@ def scan():
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logging.debug(f"Files in request: {list(request.files.keys())}")
+    logging.debug(f"Form data: {list(request.form.keys())}")
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
