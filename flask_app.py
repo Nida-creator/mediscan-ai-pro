@@ -53,8 +53,15 @@ def demo_extract(file):
 @app.route('/')
 def dashboard():
     name = session.get('user_name', '')
-    stats = session.get('stats', {'total': 0, 'last_score': '—', 'this_month': 0})
-    recent = session.get('recent_reports', [])
+    # Load stats from file so they survive page refreshes
+    STATS_FILE = '/tmp/app_stats.json'
+    try:
+        with open(STATS_FILE, 'r') as sf:
+            stats = json.load(sf)
+        recent = stats.get('recent', [])
+    except:
+        stats = {'total': 0, 'last_score': '—', 'this_month': 0}
+        recent = []
     return render_template('dashboard.html', name=name, stats=stats, recent=recent)
 
 @app.route('/set-name', methods=['POST'])
@@ -136,24 +143,32 @@ def upload():
             members[idx]['last_scan'] = dt.now().strftime('%d %b %Y')
             save_family(members)
 
-        # Update stats
-        stats = session.get('stats', {'total': 0, 'last_score': '—', 'this_month': 0})
+        # Update stats — persist to file so dashboard always reflects
+        from datetime import datetime as dt2
+        STATS_FILE = '/tmp/app_stats.json'
+        try:
+            with open(STATS_FILE, 'r') as sf:
+                stats = json.load(sf)
+        except:
+            stats = {'total': 0, 'last_score': '—', 'this_month': 0, 'recent': []}
+
         stats['total'] += 1
         stats['last_score'] = f"{risk['score']}/100"
         stats['this_month'] += 1
-        session['stats'] = stats
-
-        # Update recent reports
-        recent = session.get('recent_reports', [])
-        from datetime import datetime
-        recent.insert(0, {
+        stats['recent'].insert(0, {
             'name': secure_filename(file.filename),
-            'date': datetime.now().strftime('%d %b %Y'),
+            'date': dt2.now().strftime('%d %b %Y'),
             'score': risk['score'],
             'level': risk['level'],
             'color': risk['color'],
         })
-        session['recent_reports'] = []  # cleared to keep cookie small
+        stats['recent'] = stats['recent'][:10]  # keep last 10 only
+
+        with open(STATS_FILE, 'w') as sf:
+            json.dump(stats, sf)
+
+        session['stats'] = stats
+        session['recent_reports'] = stats['recent']
 
         # Save report to active family member
         from datetime import datetime
