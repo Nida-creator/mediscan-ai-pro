@@ -729,3 +729,38 @@ input, select, textarea { font-family: inherit; }
 .explanation-text strong {
     color: #111827;
 }
+
+/* ── AI Explanation Cards ───────────────────────────────────── */
+.exp-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1D4ED8;
+    margin: 18px 0 6px 0;
+    padding: 6px 12px;
+    background: #EFF6FF;
+    border-left: 3px solid #2563EB;
+    border-radius: 4px;
+}
+.exp-row {
+    font-size: 0.88rem;
+    padding: 6px 10px;
+    margin: 3px 0;
+    border-radius: 6px;
+    line-height: 1.5;
+    color: #1F2937;
+}
+.exp-normal {
+    background: #F0FDF4;
+    color: #166534;
+}
+.exp-abnormal {
+    background: #FEF2F2;
+    color: #991B1B;
+    font-weight: 500;
+}
+.exp-plain {
+    font-size: 0.88rem;
+    color: #4B5563;
+    padding: 4px 10px;
+    line-height: 1.6;
+}

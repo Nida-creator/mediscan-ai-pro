@@ -141,6 +141,29 @@ function processFile(file) {
         });
 }
 
+function formatExplanation(text) {
+    const lines = text.split('\n');
+    let html = '';
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) continue;
+        if (line.startsWith('SECTION:')) {
+            const title = line.replace('SECTION:', '').trim();
+            html += `<div class="exp-section-title">${title}</div>`;
+        } else if (line.startsWith('-')) {
+            const body = line.replace(/^-\s*/, '');
+            const isAbnormal = body.toUpperCase().includes('ABNORMAL');
+            const isNormal = body.toUpperCase().includes('NORMAL');
+            const cls = isAbnormal ? 'exp-row exp-abnormal' : isNormal ? 'exp-row exp-normal' : 'exp-row';
+            const icon = isAbnormal ? '🔴' : isNormal ? '🟢' : '▪️';
+            html += `<div class="${cls}">${icon} ${body}</div>`;
+        } else {
+            html += `<div class="exp-plain">${line}</div>`;
+        }
+    }
+    return html || '<p>' + text + '</p>';
+}
+
 function showResults(data) {
     // Explanation
     document.getElementById('explanationText').innerHTML =

@@ -31,10 +31,22 @@ def explain_report(report_text: str, language: str = 'en') -> str:
         system_msg = "آپ ایک دوستانہ طبی معاون ہیں۔ ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں۔"
         user_msg = f"اس لیب رپورٹ کو سادہ اردو میں سمجھائیں:\n{report_text}"
     else:
-        system_msg = "You are a friendly medical assistant helping Pakistani patients understand their lab reports. Never diagnose — only explain. Do NOT use markdown symbols like **, *, #, or numbered lists. Write in clean plain sentences grouped by section."
-        user_msg = f"""Explain this lab report in simple plain English. No markdown, no asterisks, no bullet points.
+        system_msg = "You are a friendly medical assistant helping Pakistani patients understand their lab reports. Never diagnose — only explain. Do NOT use **, *, #, or numbered lists."
+        user_msg = f"""Explain this lab report clearly. Follow this exact format:
 
-Write it like a doctor friend explaining over the phone. Group values by section (e.g. Blood Count, Lipid Profile). For each value say if it is Normal or Abnormal and what it means in one simple sentence. End with a short overall summary.
+SECTION: Blood Count
+- Hemoglobin: ABNORMAL — Low at 8.0. This means fewer red blood cells carrying oxygen.
+- WBC: NORMAL — Good immune defense.
+
+SECTION: Lipid Profile
+- Cholesterol: NORMAL — Heart risk is low.
+
+Rules:
+- Start each group with SECTION: GroupName on its own line
+- Each value on its own line starting with -
+- Keep each line short and simple
+- End with SECTION: Summary and 2-3 sentences overall
+- No asterisks, no numbers, no markdown
 
 Lab Report:\n{report_text}"""
 
