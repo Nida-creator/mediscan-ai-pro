@@ -10,16 +10,7 @@
     </div>
 </div>
 
-{% if not report_name %}
-<div class="card empty-chat-card">
-    <div class="empty-chat-icon">📄</div>
-    <h3>No Report Uploaded</h3>
-    <p>Please upload a lab report first to start chatting with the AI Doctor.</p>
-    <a href="/scan" class="btn-primary" style="display:inline-block; margin-top:16px; text-decoration:none;">
-        Upload Report →
-    </a>
-</div>
-{% else %}
+
 
 <div class="chat-layout">
 
@@ -80,7 +71,7 @@
     </div>
 
 </div>
-{% endif %}
+
 
 {% endblock %}
 
