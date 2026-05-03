@@ -201,6 +201,7 @@ function selectMember(idx) {
 
     localStorage.setItem('active_member', idx);
     localStorage.setItem('active_member', idx);
+    localStorage.setItem('active_member_name', m.name);
     fetch(`/family/select/${idx}`);
 }
 </script>

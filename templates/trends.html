@@ -10,8 +10,17 @@
 <div class="page-header-banner">
     <div>
         <h1 class="page-title">📈 Health Trends</h1>
-        <p class="page-sub">Upload multiple reports to track your health over time</p>
+        <p class="page-sub">Track your health over time across multiple scans</p>
     </div>
+</div>
+
+<!-- Auto-loaded member trends banner -->
+<div id="memberTrendBanner" class="card" style="display:none; margin-bottom:16px; background:#EFF6FF; border:1px solid #BFDBFE;">
+    <p style="margin:0; color:#1D4ED8; font-weight:600;">📊 Showing saved scan history for: <span id="memberTrendName"></span></p>
+    <p style="margin:4px 0 0 0; font-size:0.85rem; color:#3B82F6;">These charts are built from all reports scanned for this family member.</p>
+</div>
+<div id="oneScanMsg" class="card" style="display:none; margin-bottom:16px; background:#FEF3C7; border:1px solid #FCD34D;">
+    <p style="margin:0; color:#92400E;">⚠️ Only 1 scan found for this member. Scan at least 2 reports to see trend charts.</p>
 </div>
 
 <!-- Upload Multiple -->
@@ -237,6 +246,33 @@ function buildTable(keys) {
     }).join('');
     table.innerHTML = headerRow + '<tbody>' + rows + '</tbody>';
 }
+
+
+// On load, check if a family member is active and load their trends
+document.addEventListener('DOMContentLoaded', () => {
+    const activeMember = localStorage.getItem('active_member');
+    const activeName = localStorage.getItem('active_member_name') || 'Selected Member';
+    if (activeMember !== null && activeMember !== '') {
+        fetch(`/family/trends/${activeMember}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.reports && data.reports.length >= 2) {
+                    document.getElementById('memberTrendBanner').style.display = 'block';
+                    document.getElementById('memberTrendName').textContent = data.member_name;
+                    trendsData = data.reports.map((r, i) => ({
+                        label: r.date || 'Report ' + (i+1),
+                        name: r.name,
+                        values: r.values || {}
+                    }));
+                    showTrends();
+                } else if (data.reports && data.reports.length === 1) {
+                    document.getElementById('memberTrendBanner').style.display = 'block';
+                    document.getElementById('memberTrendName').textContent = data.member_name;
+                    document.getElementById('oneScanMsg').style.display = 'block';
+                }
+            });
+    }
+});
 
 function resetTrends() {
     document.getElementById('trendsUploadSection').style.display = 'block';

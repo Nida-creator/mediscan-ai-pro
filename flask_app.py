@@ -92,8 +92,13 @@ def upload():
         else:
             text = demo_extract(file)
 
-        # Store only first 800 chars to keep cookie small
-        session['report_text'] = text[:800] if text else ''
+        # Store report text in file (not session - cookie too small)
+        import hashlib
+        report_id = hashlib.md5(secure_filename(file.filename).encode()).hexdigest()[:8]
+        report_file = f'/tmp/report_{report_id}.txt'
+        with open(report_file, 'w') as rf:
+            rf.write(text)
+        session['report_file'] = report_file
         session['report_name'] = secure_filename(file.filename)
 
         # Get AI results
@@ -104,21 +109,28 @@ def upload():
             explanation = demo_explain(text, lang)
             risk = demo_risk(text)
 
-        # Save report to active family member
+        # Save report to active family member + save trend data
         from datetime import datetime as dt
         members = load_family()
-        # Read from form data (not session - session cookie too large)
         active_idx_raw = request.form.get('active_member', '')
         active_idx = int(active_idx_raw) if active_idx_raw.strip().isdigit() else None
         if active_idx is not None and int(active_idx) < len(members):
             idx = int(active_idx)
             if 'reports' not in members[idx]:
                 members[idx]['reports'] = []
+            # Extract key values for trend charts
+            key_values = {}
+            if AI_AVAILABLE:
+                try:
+                    key_values = extract_key_values(text)
+                except:
+                    key_values = {}
             members[idx]['reports'].append({
                 'name': secure_filename(file.filename),
                 'date': dt.now().strftime('%d %b %Y'),
                 'score': risk['score'],
                 'level': risk['level'],
+                'values': key_values,
             })
             members[idx]['last_score'] = str(risk['score']) + '/100'
             members[idx]['last_scan'] = dt.now().strftime('%d %b %Y')
@@ -173,6 +185,10 @@ def upload():
 @app.route('/chat')
 def chat_page():
     report_name = session.get('report_name', '')
+    # Verify report file still exists
+    report_file = session.get('report_file', '')
+    if report_file and not os.path.exists(report_file):
+        report_name = ''  # File gone, show upload prompt
     return render_template('chat.html', report_name=report_name)
 
 @app.route('/chat/send', methods=['POST'])
@@ -180,7 +196,12 @@ def chat_send():
     data = request.get_json()
     question = data.get('question', '')
     lang = data.get('lang', 'en')
-    report_text = session.get('report_text', '')
+    # Read report from file (not session)
+    report_file = session.get('report_file', '')
+    report_text = ''
+    if report_file and os.path.exists(report_file):
+        with open(report_file, 'r') as rf:
+            report_text = rf.read()
 
     if not report_text:
         return jsonify({'error': 'No report uploaded'}), 400
@@ -242,6 +263,18 @@ def family():
 def family_data():
     members = load_family()
     return jsonify({'members': members})
+
+@app.route('/family/trends/<int:idx>')
+def family_trends(idx):
+    '''Returns trend data for a specific family member for the charts page'''
+    members = load_family()
+    if idx >= len(members):
+        return jsonify({'reports': []})
+    reports = members[idx].get('reports', [])
+    return jsonify({
+        'member_name': members[idx]['name'],
+        'reports': reports
+    })
 
 @app.route('/family/add', methods=['POST'])
 def family_add():
