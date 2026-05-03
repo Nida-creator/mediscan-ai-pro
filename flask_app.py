@@ -92,7 +92,8 @@ def upload():
         else:
             text = demo_extract(file)
 
-        session['report_text'] = text
+        # Store only first 800 chars to keep cookie small
+        session['report_text'] = text[:800] if text else ''
         session['report_name'] = secure_filename(file.filename)
 
         # Get AI results
@@ -106,7 +107,9 @@ def upload():
         # Save report to active family member
         from datetime import datetime as dt
         members = load_family()
-        active_idx = session.get('active_member', None)
+        # Read from form data (not session - session cookie too large)
+        active_idx_raw = request.form.get('active_member', '')
+        active_idx = int(active_idx_raw) if active_idx_raw.strip().isdigit() else None
         if active_idx is not None and int(active_idx) < len(members):
             idx = int(active_idx)
             if 'reports' not in members[idx]:
@@ -138,7 +141,7 @@ def upload():
             'level': risk['level'],
             'color': risk['color'],
         })
-        session['recent_reports'] = recent[:5]
+        session['recent_reports'] = []  # cleared to keep cookie small
 
         # Save report to active family member
         from datetime import datetime

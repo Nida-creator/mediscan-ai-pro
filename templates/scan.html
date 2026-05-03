@@ -121,6 +121,7 @@ function processFile(file) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('lang', currentLang);
+    formData.append('active_member', localStorage.getItem('active_member') || '');
 
     fetch('/upload', { method: 'POST', body: formData })
         .then(r => r.json())

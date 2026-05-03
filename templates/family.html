@@ -200,6 +200,7 @@ function selectMember(idx) {
     document.getElementById('memberDetail').style.display = 'block';
 
     localStorage.setItem('active_member', idx);
+    localStorage.setItem('active_member', idx);
     fetch(`/family/select/${idx}`);
 }
 </script>
