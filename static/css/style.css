@@ -708,3 +708,24 @@ input, select, textarea { font-family: inherit; }
     .stats-row { grid-template-columns: 1fr 1fr; }
     .page-content { padding: 16px; }
 }
+
+/* ── AI Explanation Formatting ─────────────────────────────── */
+.explanation-text {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #1F2937;
+}
+.explanation-text h4 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1D4ED8;
+    margin: 16px 0 6px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #E5E7EB;
+}
+.explanation-text p {
+    margin: 6px 0;
+}
+.explanation-text strong {
+    color: #111827;
+}
