@@ -28,8 +28,23 @@ MODEL = "llama-3.3-70b-versatile"
 
 def explain_report(report_text: str, language: str = 'en') -> str:
     if language == 'ur':
-        system_msg = "آپ ایک دوستانہ طبی معاون ہیں۔ ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں۔"
-        user_msg = f"اس لیب رپورٹ کو سادہ اردو میں سمجھائیں:\n{report_text}"
+        system_msg = "آپ ایک دوستانہ طبی معاون ہیں۔ ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں۔ کوئی **, *, # استعمال نہ کریں۔"
+        user_msg = f"""اس لیب رپورٹ کو سادہ اردو میں سمجھائیں۔ بالکل اس فارمیٹ میں لکھیں:
+
+SECTION: خون کی گنتی
+- ہیموگلوبن: غیر معمولی — 8.0 کم ہے۔ اس کا مطلب خون میں آکسیجن کم ہے۔
+- WBC: معمول — قوت مدافعت ٹھیک ہے۔
+
+SECTION: لپڈ پروفائل
+- کولیسٹرول: معمول — دل کا خطرہ کم ہے۔
+
+اصول:
+- ہر گروپ SECTION: نام سے شروع کریں
+- ہر قدر - سے شروع ہو اپنی لائن پر
+- آخر میں SECTION: خلاصہ لکھیں 2-3 جملوں میں
+- کوئی asterisks یا markdown نہیں
+
+لیب رپورٹ:\n{report_text}"""
     else:
         system_msg = "You are a friendly medical assistant helping Pakistani patients understand their lab reports. Never diagnose — only explain. Do NOT use **, *, #, or numbered lists."
         user_msg = f"""Explain this lab report clearly. Follow this exact format:
@@ -70,8 +85,8 @@ def chat_with_report(report_text: str, question: str, language: str = 'en') -> s
         system_msg = (
             "آپ ایک ذہین اور دوستانہ AI ڈاکٹر ہیں جو پاکستانی مریضوں کی مدد کرتے ہیں۔ "
             "آپ کے پاس مریض کی لیب رپورٹ موجود ہے۔ "
-            "آپ ہر طرح کے صحت سے متعلق سوالات کا جواب دے سکتے ہیں۔ "
-            "ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں لیکن مفید مشورہ ضرور دیں۔"
+            "ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں لیکن مفید مشورہ ضرور دیں۔ "
+            "کوئی **, *, # استعمال نہ کریں۔ سادہ اردو جملوں میں لکھیں۔"
         )
     else:
         system_msg = (
