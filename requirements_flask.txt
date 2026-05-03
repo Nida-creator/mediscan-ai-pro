@@ -8,3 +8,5 @@ pytesseract==0.3.10
 pandas==2.2.2
 werkzeug==3.0.3
 gunicorn==21.2.0
+
+pycryptodome==3.20.0
