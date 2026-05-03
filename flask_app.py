@@ -179,29 +179,45 @@ def trends_upload():
     return jsonify({'results': results})
 
 
+import json, os
+
+FAMILY_FILE = '/tmp/family_data.json'
+
+def load_family():
+    if os.path.exists(FAMILY_FILE):
+        with open(FAMILY_FILE, 'r') as f:
+            return json.load(f)
+    return []
+
+def save_family(members):
+    with open(FAMILY_FILE, 'w') as f:
+        json.dump(members, f)
+
 @app.route('/family')
 def family():
-    members = session.get('family_members', [])
+    members = load_family()
     return render_template('family.html', members=members)
+
+@app.route('/family/data')
+def family_data():
+    members = load_family()
+    return jsonify({'members': members})
 
 @app.route('/family/add', methods=['POST'])
 def family_add():
     data = request.get_json()
-    members = session.get('family_members', [])
+    members = load_family()
     members.append({
         'name': data.get('name'),
         'relation': data.get('relation'),
         'age': data.get('age'),
         'reports': []
     })
-    session['family_members'] = members
+    save_family(members)
     return jsonify({'ok': True, 'members': members})
 
 @app.route('/family/select/<int:idx>')
 def family_select(idx):
-    members = session.get('family_members', [])
-    if idx < len(members):
-        session['active_member'] = idx
     return jsonify({'ok': True})
 
 

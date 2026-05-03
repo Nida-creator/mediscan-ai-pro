@@ -121,7 +121,16 @@ const AVATARS = {
     'Grandfather':'👴','Grandmother':'👵','Other':'👤'
 };
 
-let members = {{ members | tojson }};
+let members = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('/family/data')
+        .then(r => r.json())
+        .then(data => {
+            members = data.members || [];
+            renderMembersList();
+        });
+});
 
 function showAddForm() {
     document.getElementById('addForm').style.display = 'block';
