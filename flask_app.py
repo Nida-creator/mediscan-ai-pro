@@ -69,6 +69,9 @@ def scan():
 
 @app.route('/upload', methods=['POST'])
 def upload():
+    print("DEBUG active_member in session:", session.get('active_member', 'NOT FOUND'))
+    print("DEBUG family file exists:", os.path.exists(FAMILY_FILE))
+    print("DEBUG all session keys:", list(session.keys()))
     import logging
     logging.basicConfig(level=logging.DEBUG)
     logging.debug(f"Files in request: {list(request.files.keys())}")
