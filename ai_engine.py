@@ -53,24 +53,37 @@ Lab Report:\n{report_text}"""
 
 def chat_with_report(report_text: str, question: str, language: str = 'en') -> str:
     if language == 'ur':
-        system_msg = "آپ ایک مددگار طبی معاون ہیں۔ اردو میں جواب دیں۔ تشخیص نہ کریں۔"
+        system_msg = (
+            "آپ ایک ذہین اور دوستانہ AI ڈاکٹر ہیں جو پاکستانی مریضوں کی مدد کرتے ہیں۔ "
+            "آپ کے پاس مریض کی لیب رپورٹ موجود ہے۔ "
+            "آپ ہر طرح کے صحت سے متعلق سوالات کا جواب دے سکتے ہیں۔ "
+            "ہمیشہ اردو میں جواب دیں۔ تشخیص نہ کریں لیکن مفید مشورہ ضرور دیں۔"
+        )
     else:
-        system_msg = "You are a helpful medical assistant. Answer questions about lab reports clearly. Do not diagnose."
+        system_msg = (
+            "You are a smart, friendly AI health assistant helping Pakistani patients. "
+            "You have access to the patient's lab report. "
+            "Answer ANY health question: diet advice (eggs, meat, sugar), exercise, "
+            "lifestyle changes, what abnormal values mean for daily life, general health tips. "
+            "Be conversational and warm like a knowledgeable doctor friend. "
+            "Give useful specific advice. Never give a formal diagnosis."
+        )
+
+    report_context = f"Patient Lab Report:\n{report_text}\n\n" if report_text else ""
 
     try:
         response = client.chat.completions.create(
             model=MODEL,
             messages=[
                 {"role": "system", "content": system_msg},
-                {"role": "user", "content": f"Lab Report:\n{report_text}\n\nQuestion:\n{question}"}
+                {"role": "user", "content": f"{report_context}Patient question: {question}"}
             ],
-            temperature=0.3,
-            max_tokens=512,
+            temperature=0.5,
+            max_tokens=600,
         )
         return response.choices[0].message.content
     except Exception as e:
         return f"Error answering question: {str(e)}"
-
 
 def summarize_risk(report_text: str) -> dict:
     default = {"score": 10, "level": "Low", "color": "green", "alerts": [], "positives": ["All values appear normal"]}
