@@ -100,6 +100,24 @@ def upload():
             explanation = demo_explain(text, lang)
             risk = demo_risk(text)
 
+        # Save report to active family member
+        from datetime import datetime as dt
+        members = load_family()
+        active_idx = session.get('active_member', None)
+        if active_idx is not None and int(active_idx) < len(members):
+            idx = int(active_idx)
+            if 'reports' not in members[idx]:
+                members[idx]['reports'] = []
+            members[idx]['reports'].append({
+                'name': secure_filename(file.filename),
+                'date': dt.now().strftime('%d %b %Y'),
+                'score': risk['score'],
+                'level': risk['level'],
+            })
+            members[idx]['last_score'] = str(risk['score']) + '/100'
+            members[idx]['last_scan'] = dt.now().strftime('%d %b %Y')
+            save_family(members)
+
         # Update stats
         stats = session.get('stats', {'total': 0, 'last_score': '—', 'this_month': 0})
         stats['total'] += 1
@@ -118,6 +136,22 @@ def upload():
             'color': risk['color'],
         })
         session['recent_reports'] = recent[:5]
+
+        # Save report to active family member
+        from datetime import datetime
+        members = load_family()
+        active_idx = session.get('active_member', None)
+        if active_idx is not None and active_idx < len(members):
+            members[active_idx]['reports'].append({
+                'name': secure_filename(file.filename),
+                'date': datetime.now().strftime('%d %b %Y'),
+                'score': risk['score'],
+                'level': risk['level'],
+                'explanation': explanation[:500],
+            })
+            members[active_idx]['last_score'] = f"{risk['score']}/100"
+            members[active_idx]['last_scan'] = datetime.now().strftime('%d %b %Y')
+            save_family(members)
 
         return jsonify({
             'ok': True,

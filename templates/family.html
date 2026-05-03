@@ -192,13 +192,14 @@ function selectMember(idx) {
     document.getElementById('detailName').textContent = m.name;
     document.getElementById('detailMeta').textContent = `${m.relation} · ${m.age} years old`;
     document.getElementById('detailReports').textContent = (m.reports || []).length;
-    document.getElementById('detailLastScan').textContent = '—';
-    document.getElementById('detailLastScore').textContent = '—';
+    document.getElementById('detailLastScan').textContent = m.last_scan || '—';
+    document.getElementById('detailLastScore').textContent = m.last_score || '—';
 
     document.getElementById('addForm').style.display = 'none';
     document.getElementById('emptyDetail').style.display = 'none';
     document.getElementById('memberDetail').style.display = 'block';
 
+    localStorage.setItem('active_member', idx);
     fetch(`/family/select/${idx}`);
 }
 </script>
