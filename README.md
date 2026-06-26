@@ -120,6 +120,6 @@ BS Computer Science — LCWU, Lahore, Pakistan
 
 This project is licensed under the MIT License.
 
---- 
+---
 
 > *"Healthcare information should be accessible to everyone — regardless of language, literacy, or income."*
